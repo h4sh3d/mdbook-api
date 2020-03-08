@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html lang="{{ language }}" class="sidebar-visible no-js {{ default_theme }}">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>{{ title }}</title>
+        {{#if is_print }}
+        <meta name="robots" content="noindex" />
+        {{/if}}
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="{{ description }}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="{{ path_to_root }}{{ favicon }}">
+        <link rel="stylesheet" href="{{ path_to_root }}css/app.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/monokai-sublime.min.css">
+    </head>
+    <body data-languages='["rust","go"]'>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "{{ path_to_root }}";
+        </script>
+
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+      </span>
+    </a>
+    <div class="toc-wrapper">
+        <div class="lang-selector">
+          <a href="#" data-language-name="rust">rust</a>
+          <a href="#" data-language-name="go">go</a>
+        </div>
+
+        <div class="search">
+          <input type="text" class="search" id="input-search" placeholder="Search">
+        </div>
+        <ul class="search-results"></ul>
+
+      <ul id="toc" class="toc-list-h1">
+      </ul>
+
+      <ul class="toc-footer">
+        <li>footer data</li>
+      </ul>
+    </div>
+
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        {{{ content }}}
+      </div>
+      <div class="dark-box">
+          <div class="lang-selector">
+              <a href="#" data-language-name="rust">rust</a>
+              <a href="#" data-language-name="go">go</a>
+          </div>
+      </div>
+    </div>
+
+
+
+        {{#if livereload}}
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("{{{livereload}}}");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        {{/if}}
+
+        <script src="{{ path_to_root }}app.js" type="text/javascript" charset="utf-8"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+    </body>
+</html>
