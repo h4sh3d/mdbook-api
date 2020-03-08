@@ -1,4 +1,10 @@
 //! Theme management for API documentation
+//!
+//! A theme is responsible for managing assests, in an HTML context those assests can
+//! be css, javascript, images, template file, etc.
+//!
+//! Theme should provide a default setup and overloading methods to allow per project
+//! customization.
 
 // TODO add sass support
 // TODO add theme extension support
