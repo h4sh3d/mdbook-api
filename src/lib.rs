@@ -7,8 +7,8 @@ pub mod html;
 
 use std::collections::BTreeMap;
 
-use html::{HtmlRenderer, Engine};
-use template::HtmlTemplate;
+use crate::html::{HtmlRenderer, HtmlContext, Engine};
+use crate::template::HtmlTemplate;
 
 use mdbook::utils;
 use mdbook::book::{BookItem};
@@ -20,7 +20,7 @@ pub struct ApiEngine {
     data: serde_json::Map<String, serde_json::Value>,
 }
 
-impl Engine for ApiEngine {
+impl Engine<HtmlContext> for ApiEngine {
     type Output = serde_json::Map<String, serde_json::Value>;
 
     fn name(&self) -> &str {
@@ -83,14 +83,11 @@ impl Engine for ApiEngine {
         Ok(ApiEngine { data })
     }
 
-    fn process_chapter(&self, item: &BookItem, _ctx: &RenderContext) -> Result<Self::Output> {
+    fn process_chapter(&self, _ctx: &RenderContext, item: &HtmlContext) -> Result<Self::Output> {
         // Clone the base data and apply changes based on chapter
         let mut data = self.data.clone();
 
-        if let BookItem::Chapter(ref ch) = *item {
-
-            let content = utils::render_markdown(&ch.content, false);
-
+        if let BookItem::Chapter(ref ch) = &item.book_item {
             // Update the context with data for this file
             let path = ch
                 .path
@@ -112,7 +109,10 @@ impl Engine for ApiEngine {
             }
 
             data.insert("path".to_owned(), json!(path));
+
+            let content = utils::render_markdown(&ch.content, false);
             data.insert("content".to_owned(), json!(content));
+
             data.insert("chapter_title".to_owned(), json!(ch.name));
             data.insert("title".to_owned(), json!(title));
             data.insert(
@@ -121,6 +121,12 @@ impl Engine for ApiEngine {
             );
             if let Some(ref section) = ch.number {
                 data.insert("section".to_owned(), json!(section.to_string()));
+            }
+
+            if item.is_index {
+                data.insert("path".to_owned(), json!("index.md"));
+                data.insert("path_to_root".to_owned(), json!(""));
+                data.insert("is_index".to_owned(), json!("true"));
             }
         }
 

@@ -15,16 +15,21 @@ use mdbook::book::{BookItem};
 use mdbook::renderer::{RenderContext, Renderer};
 use mdbook::errors::Result;
 
+pub struct HtmlContext {
+    pub book_item: BookItem,
+    pub is_index: bool,
+}
+
 /// Must be extensible and configurable but shoud implement the logic
 /// for rendering HTML project, combining theme and template management.
 #[derive(Default)]
-pub struct HtmlRenderer<E: Engine, T: Template<E::Output>> {
+pub struct HtmlRenderer<E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>> {
     engine: E,
     template: T,
     theme: T::Theme,
 }
 
-impl<E: Engine, T: Template<E::Output>> HtmlRenderer<E, T> {
+impl<E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>> HtmlRenderer<E, T> {
     pub fn new(ctx: &RenderContext) -> Result<Self> {
         Ok(HtmlRenderer {
             engine: E::load_from_context(&ctx)?,
@@ -54,37 +59,35 @@ impl<E: Engine, T: Template<E::Output>> HtmlRenderer<E, T> {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
+        let mut is_index = true;
         for item in book.iter() {
-            //if ctx.is_index {
-            //    ctx.data.insert("path".to_owned(), json!("index.md"));
-            //    ctx.data.insert("path_to_root".to_owned(), json!(""));
-            //    ctx.data.insert("is_index".to_owned(), json!("true"));
-            //    let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-            //    let rendered_index = fix_code_blocks(&rendered_index);
-            //    debug!("Creating index.html from {}", path);
-            //    utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
-            //}
-            let mut data = self.engine.process_chapter(&item, &ctx)?;
+            let html_item = HtmlContext {
+                book_item: item.clone(),
+                is_index,
+            };
 
-            self.template.render_chapter(&ctx, &self.theme, &item, &mut data)?;
+            let mut data = self.engine.process_chapter(&ctx, &html_item)?;
+
+            self.template.render_chapter(&ctx, &self.theme, &html_item, &mut data)?;
+            is_index = false;
         }
 
         self.theme.copy_static_files(&ctx)
     }
 }
 
-pub trait Engine: Sized {
+pub trait Engine<C>: Sized {
     type Output: Serialize;
 
     fn name(&self) -> &str;
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self>;
 
-    fn process_chapter(&self, item: &BookItem, ctx: &RenderContext) -> Result<Self::Output>;
+    fn process_chapter(&self, ctx: &RenderContext, item: &C) -> Result<Self::Output>;
 }
 
 /// Implement mdbook `Renderer` for all HtmlRenderer
-impl<E, T> Renderer for HtmlRenderer<E, T> where E: Engine, T: Template<E::Output>  {
+impl<E, T> Renderer for HtmlRenderer<E, T> where E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>  {
     fn name(&self) -> &str {
         self.name()
     }

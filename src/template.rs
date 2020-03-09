@@ -19,28 +19,29 @@ use mdbook::errors::Result;
 
 use crate::theme::Theme;
 use crate::theme::HtmlTheme;
+use crate::html::HtmlContext;
 
-pub trait Template<I: Serialize>: Sized {
+pub trait Template<C, I: Serialize>: Sized {
     type Theme: Theme;
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self>;
 
-    fn render_chapter(&self, ctx: &RenderContext, theme: &Self::Theme, item: &BookItem, input: &mut I) -> Result<()>;
+    fn render_chapter(&self, ctx: &RenderContext, theme: &Self::Theme, item: &C, input: &mut I) -> Result<()>;
 }
 
 #[derive(Debug, Default)]
 pub struct HtmlTemplate;
 
-impl<I> Template<I> for HtmlTemplate where I: Serialize {
+impl<I> Template<HtmlContext, I> for HtmlTemplate where I: Serialize {
     type Theme = HtmlTheme;
 
     fn load_from_context(_ctx: &RenderContext) -> Result<Self> {
         Ok(HtmlTemplate)
     }
 
-    fn render_chapter(&self, ctx: &RenderContext, theme: &Self::Theme, item: &BookItem, input: &mut I) -> Result<()> {
+    fn render_chapter(&self, ctx: &RenderContext, theme: &Self::Theme, item: &HtmlContext, input: &mut I) -> Result<()> {
 
-        if let BookItem::Chapter(ref ch) = *item {
+        if let BookItem::Chapter(ref ch) = &item.book_item {
             let mut handlebars = Handlebars::new();
 
             handlebars.register_template_string("index", String::from_utf8(theme.get_template())?)?;
@@ -74,8 +75,13 @@ impl<I> Template<I> for HtmlTemplate where I: Serialize {
 
             //let rendered = self.post_process(rendered, &ctx.html_config.playpen);
 
+
             // Write to file
-            utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+            if item.is_index {
+                utils::fs::write_file(&ctx.destination, "index.html", rendered.as_bytes())?;
+            } else {
+                utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+            }
 
         }
 
