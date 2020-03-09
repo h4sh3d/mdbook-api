@@ -1,19 +1,23 @@
-//! HTML Basic renderer
+//! HTML API renderer
 //!
 //! An HTML renderer is a basic, extensible Markdown to HTML renderer
 //! engine for `mdbook`.
 
+use crate::engine::Engine;
 use crate::template::Template;
 use crate::theme::Theme;
 
 use std::fs;
-use serde::Serialize;
 
-use mdbook::utils;
-use mdbook::errors::ResultExt;
-use mdbook::book::{BookItem};
-use mdbook::renderer::{RenderContext, Renderer};
+use mdbook::book::BookItem;
 use mdbook::errors::Result;
+use mdbook::errors::ResultExt;
+use mdbook::renderer::{RenderContext, Renderer};
+use mdbook::utils;
+
+pub mod engine;
+pub mod template;
+pub mod theme;
 
 pub struct HtmlContext {
     pub book_item: BookItem,
@@ -68,7 +72,8 @@ impl<E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>> HtmlRenderer<E
 
             let mut data = self.engine.process_chapter(&ctx, &html_item)?;
 
-            self.template.render_chapter(&ctx, &self.theme, &html_item, &mut data)?;
+            self.template
+                .render_chapter(&ctx, &self.theme, &html_item, &mut data)?;
             is_index = false;
         }
 
@@ -76,18 +81,12 @@ impl<E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>> HtmlRenderer<E
     }
 }
 
-pub trait Engine<C>: Sized {
-    type Output: Serialize;
-
-    fn name(&self) -> &str;
-
-    fn load_from_context(ctx: &RenderContext) -> Result<Self>;
-
-    fn process_chapter(&self, ctx: &RenderContext, item: &C) -> Result<Self::Output>;
-}
-
 /// Implement mdbook `Renderer` for all HtmlRenderer
-impl<E, T> Renderer for HtmlRenderer<E, T> where E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>  {
+impl<E, T> Renderer for HtmlRenderer<E, T>
+where
+    E: Engine<HtmlContext>,
+    T: Template<HtmlContext, E::Output>,
+{
     fn name(&self) -> &str {
         self.name()
     }
