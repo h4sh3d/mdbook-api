@@ -55,17 +55,10 @@ where
 
             let filepath = Path::new(&ch.path).with_extension("html");
 
-            // Print version
-            //let mut print_content = String::new();
-
-            //let mut is_index = true;
-
             // Render the handlebars template with the data
             let rendered = handlebars.render("index", &input)?;
             // TODO fixe html stream
             let rendered = fix_code_blocks(&rendered);
-
-            //let rendered = self.post_process(rendered, &ctx.html_config.playpen);
 
             // Write to file
             if item.is_index {

@@ -1,7 +1,7 @@
 use crate::api::HtmlContext;
 use crate::engine::Engine;
 
-use std::collections::BTreeMap;
+//use std::collections::BTreeMap;
 
 use mdbook::book::BookItem;
 use mdbook::errors::Result;
@@ -22,7 +22,7 @@ impl Engine<HtmlContext> for HtmlEngine {
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self> {
         let config = &ctx.config;
-        let book = &ctx.book;
+        //let book = &ctx.book;
 
         let mut data = serde_json::Map::new();
 
@@ -40,39 +40,39 @@ impl Engine<HtmlContext> for HtmlEngine {
         );
         data.insert("favicon".to_owned(), json!("favicon.png"));
 
-        let mut chapters = vec![];
+        //let mut chapters = vec![];
 
-        for item in book.iter() {
-            // Create the data to inject in the template
-            let mut chapter = BTreeMap::new();
+        //for item in book.iter() {
+        //    // Create the data to inject in the template
+        //    let mut chapter = BTreeMap::new();
 
-            match *item {
-                BookItem::Chapter(ref ch) => {
-                    if let Some(ref section) = ch.number {
-                        chapter.insert("section".to_owned(), json!(section.to_string()));
-                    }
+        //    match *item {
+        //        BookItem::Chapter(ref ch) => {
+        //            if let Some(ref section) = ch.number {
+        //                chapter.insert("section".to_owned(), json!(section.to_string()));
+        //            }
 
-                    chapter.insert(
-                        "has_sub_items".to_owned(),
-                        json!((!ch.sub_items.is_empty()).to_string()),
-                    );
+        //            chapter.insert(
+        //                "has_sub_items".to_owned(),
+        //                json!((!ch.sub_items.is_empty()).to_string()),
+        //            );
 
-                    chapter.insert("name".to_owned(), json!(ch.name));
-                    let path = ch
-                        .path
-                        .to_str()
-                        .chain_err(|| "Could not convert path to str")?;
-                    chapter.insert("path".to_owned(), json!(path));
-                }
-                BookItem::Separator => {
-                    chapter.insert("spacer".to_owned(), json!("_spacer_"));
-                }
-            }
+        //            chapter.insert("name".to_owned(), json!(ch.name));
+        //            let path = ch
+        //                .path
+        //                .to_str()
+        //                .chain_err(|| "Could not convert path to str")?;
+        //            chapter.insert("path".to_owned(), json!(path));
+        //        }
+        //        BookItem::Separator => {
+        //            chapter.insert("spacer".to_owned(), json!("_spacer_"));
+        //        }
+        //    }
 
-            chapters.push(chapter);
-        }
+        //    chapters.push(chapter);
+        //}
 
-        data.insert("chapters".to_owned(), json!(chapters));
+        //data.insert("chapters".to_owned(), json!(chapters));
         Ok(HtmlEngine { data })
     }
 

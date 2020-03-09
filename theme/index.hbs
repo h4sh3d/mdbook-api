@@ -25,44 +25,42 @@
             var path_to_root = "{{ path_to_root }}";
         </script>
 
-    <a href="#" id="nav-button">
-      <span>
-        NAV
-      </span>
-    </a>
-    <div class="toc-wrapper">
-        <div class="lang-selector">
-          <a href="#" data-language-name="rust">rust</a>
-          <a href="#" data-language-name="go">go</a>
-        </div>
-
-        <div class="search">
-          <input type="text" class="search" id="input-search" placeholder="Search">
-        </div>
-        <ul class="search-results"></ul>
-
-      <ul id="toc" class="toc-list-h1">
-      </ul>
-
-      <ul class="toc-footer">
-        <li>footer data</li>
-      </ul>
-    </div>
-
-    <div class="page-wrapper">
-      <div class="dark-box"></div>
-      <div class="content">
-        {{{ content }}}
-      </div>
-      <div class="dark-box">
-          <div class="lang-selector">
+        <a href="#" id="nav-button">
+          <span>
+            NAV
+          </span>
+        </a>
+        <div class="toc-wrapper">
+            <div class="lang-selector">
               <a href="#" data-language-name="rust">rust</a>
               <a href="#" data-language-name="go">go</a>
+            </div>
+
+            <div class="search">
+              <input type="text" class="search" id="input-search" placeholder="Search">
+            </div>
+            <ul class="search-results"></ul>
+
+          <ul id="toc" class="toc-list-h1">
+          </ul>
+
+          <ul class="toc-footer">
+            <li>footer data</li>
+          </ul>
+        </div>
+
+        <div class="page-wrapper">
+          <div class="dark-box"></div>
+          <div class="content">
+            {{{ content }}}
           </div>
-      </div>
-    </div>
-
-
+          <div class="dark-box">
+              <div class="lang-selector">
+                  <a href="#" data-language-name="rust">rust</a>
+                  <a href="#" data-language-name="go">go</a>
+              </div>
+          </div>
+        </div>
 
         {{#if livereload}}
         <!-- Livereload script (if served using the cli tool) -->

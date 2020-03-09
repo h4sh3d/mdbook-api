@@ -11,6 +11,12 @@ static FAVICON: &[u8] = include_bytes!("../../theme/favicon.png");
 static APP_CSS: &[u8] = include_bytes!("../../theme/app.css");
 static APP_JS: &[u8] = include_bytes!("../../theme/app.js");
 
+static FONT_EOT: &[u8] = include_bytes!("../../theme/fonts/slate.eot");
+static FONT_SVG: &[u8] = include_bytes!("../../theme/fonts/slate.svg");
+static FONT_TTF: &[u8] = include_bytes!("../../theme/fonts/slate.ttf");
+static FONT_WOFF: &[u8] = include_bytes!("../../theme/fonts/slate.woff");
+static FONT_WOFF2: &[u8] = include_bytes!("../../theme/fonts/slate.woff2");
+
 #[derive(Debug)]
 pub struct HtmlTheme {
     template: Vec<u8>,
@@ -23,6 +29,12 @@ impl HtmlTheme {
         assets_map.insert("favicon.png".to_owned(), FAVICON.to_owned());
         assets_map.insert("app.css".to_owned(), APP_CSS.to_owned());
         assets_map.insert("app.js".to_owned(), APP_JS.to_owned());
+
+        assets_map.insert("fonts/slate.eot".to_owned(), FONT_EOT.to_owned());
+        assets_map.insert("fonts/slate.svg".to_owned(), FONT_SVG.to_owned());
+        assets_map.insert("fonts/slate.ttf".to_owned(), FONT_TTF.to_owned());
+        assets_map.insert("fonts/slate.woff".to_owned(), FONT_WOFF.to_owned());
+        assets_map.insert("fonts/slate.woff2".to_owned(), FONT_WOFF2.to_owned());
         assets_map
     }
 }
