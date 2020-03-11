@@ -7,6 +7,7 @@ use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderError};
 use pulldown_cmark::{html, Event, Parser};
 use regex::{Captures, Regex};
 use serde::Serialize;
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -170,28 +171,31 @@ impl HelperDef for RenderToc {
                 ("", 1)
             };
 
-            if level > current_level {
-                while level > current_level {
-                    current_level += 1;
-                    out.write(&format!("<ul class=\"toc-list-h{}\">", level))?;
+            match level.cmp(&current_level) {
+                Ordering::Less => {
+                    while level < current_level {
+                        out.write("</ul>")?;
+                        current_level -= 1;
+                    }
+                    out.write("<li>")?;
                 }
-                out.write("<li>")?;
-            } else if level < current_level {
-                while level < current_level {
-                    out.write("</ul>")?;
-                    current_level -= 1;
+                Ordering::Equal => {
+                    if close {
+                        out.write("</li>")?;
+                        close = false;
+                    }
+                    out.write("<li>")?;
                 }
-                out.write("<li>")?;
-            } else {
-                if close {
-                    out.write("</li>")?;
-                    close = false;
+                Ordering::Greater => {
+                    while level > current_level {
+                        current_level += 1;
+                        out.write(&format!("<ul class=\"toc-list-h{}\">", level))?;
+                    }
+                    out.write("<li>")?;
                 }
-                out.write("<li>")?;
             }
 
             if let Some(name) = item.get("name") {
-
                 //let ancor = if let Some(path) = item.get("path") {
                 //    if !path.is_empty() {
                 //        let tmp = Path::new(path)

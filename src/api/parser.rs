@@ -5,7 +5,7 @@ use std::path::Path;
 
 use mdbook::utils;
 
-pub fn parser_from_str<'a>(content: &'a str) -> impl Iterator<Item = Event<'a>> {
+pub fn parser_from_str(content: &str) -> impl Iterator<Item = Event<'_>> {
     let p = utils::new_cmark_parser(content);
     p.map(clean_codeblock_headers)
         .map(|event| adjust_links(event, None))
