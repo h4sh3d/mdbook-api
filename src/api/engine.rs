@@ -1,7 +1,8 @@
-use crate::engine::Engine;
 use crate::api::parser::parser_from_str;
+use crate::engine::Engine;
 
 use pulldown_cmark::html;
+use std::collections::BTreeMap;
 
 use mdbook::book::BookItem;
 use mdbook::errors::Result;
@@ -19,7 +20,6 @@ pub struct HtmlContext {
     pub full_content: String,
 }
 
-
 // Prepare data for HTML rendering with Handlebar
 pub struct HtmlEngine {
     data: serde_json::Map<String, serde_json::Value>,
@@ -33,6 +33,7 @@ impl Engine<HtmlContext> for HtmlEngine {
     }
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self> {
+        let book = &ctx.book;
         let config = &ctx.config;
 
         let mut data = serde_json::Map::new();
@@ -50,6 +51,40 @@ impl Engine<HtmlContext> for HtmlEngine {
             json!(config.book.description.clone().unwrap_or_default()),
         );
         data.insert("favicon".to_owned(), json!("favicon.png"));
+
+        let mut chapters = vec![];
+
+        for item in book.iter() {
+            // Create the data to inject in the template
+            let mut chapter = BTreeMap::new();
+
+            match *item {
+                BookItem::Chapter(ref ch) => {
+                    if let Some(ref section) = ch.number {
+                        chapter.insert("section".to_owned(), json!(section.to_string()));
+                    }
+
+                    chapter.insert(
+                        "has_sub_items".to_owned(),
+                        json!((!ch.sub_items.is_empty()).to_string()),
+                    );
+
+                    chapter.insert("name".to_owned(), json!(ch.name));
+                    let path = ch
+                        .path
+                        .to_str()
+                        .chain_err(|| "Could not convert path to str")?;
+                    chapter.insert("path".to_owned(), json!(path));
+                }
+                BookItem::Separator => {
+                    chapter.insert("spacer".to_owned(), json!("_spacer_"));
+                }
+            }
+
+            chapters.push(chapter);
+        }
+
+        data.insert("chapters".to_owned(), json!(chapters));
 
         Ok(HtmlEngine { data })
     }

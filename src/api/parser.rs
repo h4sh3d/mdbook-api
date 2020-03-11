@@ -1,16 +1,14 @@
 use pulldown_cmark::{CowStr, Event, Tag};
 use regex::Regex;
-use std::path::Path;
 use std::fmt::Write;
+use std::path::Path;
 
 use mdbook::utils;
 
 pub fn parser_from_str<'a>(content: &'a str) -> impl Iterator<Item = Event<'a>> {
     let p = utils::new_cmark_parser(content);
-    p
-        .map(clean_codeblock_headers)
+    p.map(clean_codeblock_headers)
         .map(|event| adjust_links(event, None))
-    
 }
 
 pub fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
@@ -115,4 +113,3 @@ pub fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         _ => event,
     }
 }
-

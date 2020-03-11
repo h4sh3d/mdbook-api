@@ -3,9 +3,11 @@ use crate::api::HtmlContext;
 use crate::template::Template;
 use crate::theme::Theme;
 
-use handlebars::Handlebars;
+use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderError};
+use pulldown_cmark::{html, Event, Parser};
 use regex::{Captures, Regex};
 use serde::Serialize;
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use mdbook::book::BookItem;
@@ -38,20 +40,7 @@ where
 
             handlebars
                 .register_template_string("index", String::from_utf8(theme.get_template())?)?;
-
-            // TODO add partial handlebars template
-            //debug!("Register the header handlebars template");
-            //handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
-
-            // TODO add helpers hook
-            //debug!("Register handlebars helpers");
-            //self.register_hbs_helpers(&mut handlebars, &html_config);
-            //handlebars.register_helper(
-            //    "toc",
-            //    Box::new(helpers::toc::RenderToc {
-            //        no_section_label: html_config.no_section_label,
-            //    }),
-            //);
+            handlebars.register_helper("toc", Box::new(RenderToc));
 
             let filepath = Path::new(&ch.path).with_extension("html");
 
@@ -89,6 +78,7 @@ where
     fn finalize_book(&self, ctx: &RenderContext, theme: &Self::Theme, input: &mut I) -> Result<()> {
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("index", String::from_utf8(theme.get_template())?)?;
+        handlebars.register_helper("toc", Box::new(RenderToc));
 
         // Render the handlebars template with the data
         let rendered = handlebars.render("index", &input)?;
@@ -145,4 +135,117 @@ pub fn fix_heading_ids(html: &str) -> String {
             )
         })
         .into_owned()
+}
+
+// Handlebars helper to construct TOC
+#[derive(Clone, Copy)]
+pub struct RenderToc;
+
+impl HelperDef for RenderToc {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        _h: &Helper<'reg, 'rc>,
+        _r: &'reg Handlebars,
+        ctx: &'rc Context,
+        rc: &mut handlebars::RenderContext<'reg>,
+        out: &mut dyn Output,
+    ) -> std::result::Result<(), RenderError> {
+        // get value from context data
+        // rc.get_path() is current json parent path, you should always use it like this
+        // param is the key of value you want to display
+        let chapters = rc.evaluate(ctx, "@root/chapters").and_then(|c| {
+            serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.as_json().clone())
+                .map_err(|_| RenderError::new("Could not decode the JSON data"))
+        })?;
+
+        out.write("<ul id=\"toc\" class=\"toc-list-h1\">")?;
+
+        let mut current_level = 1;
+        let mut close = false;
+
+        for item in chapters {
+            let (_, level) = if let Some(s) = item.get("section") {
+                (s.as_str(), s.matches('.').count())
+            } else {
+                ("", 1)
+            };
+
+            if level > current_level {
+                while level > current_level {
+                    current_level += 1;
+                    out.write(&format!("<ul class=\"toc-list-h{}\">", level))?;
+                }
+                out.write("<li>")?;
+            } else if level < current_level {
+                while level < current_level {
+                    out.write("</ul>")?;
+                    current_level -= 1;
+                }
+                out.write("<li>")?;
+            } else {
+                if close {
+                    out.write("</li>")?;
+                    close = false;
+                }
+                out.write("<li>")?;
+            }
+
+            if let Some(name) = item.get("name") {
+
+                //let ancor = if let Some(path) = item.get("path") {
+                //    if !path.is_empty() {
+                //        let tmp = Path::new(path)
+                //            .with_extension("");
+
+                //        tmp.as_path()
+                //            .file_name()
+                //            .unwrap()
+                //            .to_str()
+                //            .unwrap()
+                //            .to_owned()
+                //    } else {
+                //        "".to_owned()
+                //    }
+                //} else {
+                //    "".to_owned()
+                //};
+
+                out.write(&format!("<a href=\"#{}\" ", utils::normalize_id(name)))?;
+                out.write(&format!("class=\"toc-h{} toc-link\" ", level))?;
+
+                // Render only inline code blocks
+
+                // filter all events that are not inline code blocks
+                let parser = Parser::new(name).filter(|event| match *event {
+                    Event::Code(_) | Event::Html(_) | Event::Text(_) => true,
+                    _ => false,
+                });
+
+                // render markdown to html
+                let mut markdown_parsed_name = String::new();
+                html::push_html(&mut markdown_parsed_name, parser);
+
+                // write to the handlebars template
+                out.write(&format!("data-title=\"{}\">", name))?;
+                out.write(&markdown_parsed_name)?;
+
+                out.write("</a>")?;
+                close = true;
+            }
+        }
+
+        while current_level > 1 {
+            if close {
+                out.write("</li>")?;
+                close = false;
+            }
+
+            out.write("</ul>")?;
+            out.write("</li>")?;
+            current_level -= 1;
+        }
+
+        out.write("</ul>")?;
+        Ok(())
+    }
 }

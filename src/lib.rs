@@ -9,7 +9,7 @@ pub mod template;
 pub mod theme;
 
 pub use api::engine::HtmlEngine;
-pub use api::template::{HtmlTemplate, HtmlOnePageTemplate};
+pub use api::template::{HtmlOnePageTemplate, HtmlTemplate};
 pub use api::HtmlRenderer;
 
 pub type ApiRenderer = HtmlRenderer<HtmlEngine, HtmlTemplate>;
