@@ -1,4 +1,3 @@
-use crate::api::HtmlContext;
 use crate::engine::Engine;
 
 //use std::collections::BTreeMap;
@@ -9,6 +8,18 @@ use mdbook::errors::ResultExt;
 use mdbook::renderer::RenderContext;
 use mdbook::utils;
 
+#[derive(Default)]
+pub struct HtmlContext {
+    // Current book item
+    pub book_item: Option<BookItem>,
+    // If the book item is the first one
+    pub is_index: bool,
+    // Accumulate the content of all book items
+    pub full_content: String,
+}
+
+
+// Prepare data for HTML rendering with Handlebar
 pub struct HtmlEngine {
     data: serde_json::Map<String, serde_json::Value>,
 }
@@ -22,7 +33,6 @@ impl Engine<HtmlContext> for HtmlEngine {
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self> {
         let config = &ctx.config;
-        //let book = &ctx.book;
 
         let mut data = serde_json::Map::new();
 
@@ -40,47 +50,18 @@ impl Engine<HtmlContext> for HtmlEngine {
         );
         data.insert("favicon".to_owned(), json!("favicon.png"));
 
-        //let mut chapters = vec![];
-
-        //for item in book.iter() {
-        //    // Create the data to inject in the template
-        //    let mut chapter = BTreeMap::new();
-
-        //    match *item {
-        //        BookItem::Chapter(ref ch) => {
-        //            if let Some(ref section) = ch.number {
-        //                chapter.insert("section".to_owned(), json!(section.to_string()));
-        //            }
-
-        //            chapter.insert(
-        //                "has_sub_items".to_owned(),
-        //                json!((!ch.sub_items.is_empty()).to_string()),
-        //            );
-
-        //            chapter.insert("name".to_owned(), json!(ch.name));
-        //            let path = ch
-        //                .path
-        //                .to_str()
-        //                .chain_err(|| "Could not convert path to str")?;
-        //            chapter.insert("path".to_owned(), json!(path));
-        //        }
-        //        BookItem::Separator => {
-        //            chapter.insert("spacer".to_owned(), json!("_spacer_"));
-        //        }
-        //    }
-
-        //    chapters.push(chapter);
-        //}
-
-        //data.insert("chapters".to_owned(), json!(chapters));
         Ok(HtmlEngine { data })
     }
 
-    fn process_chapter(&self, _ctx: &RenderContext, item: &HtmlContext) -> Result<Self::Output> {
+    fn process_chapter(
+        &self,
+        _ctx: &RenderContext,
+        item: &mut HtmlContext,
+    ) -> Result<Self::Output> {
         // Clone the base data and apply changes based on chapter
         let mut data = self.data.clone();
 
-        if let BookItem::Chapter(ref ch) = &item.book_item {
+        if let Some(BookItem::Chapter(ref ch)) = &item.book_item {
             // Update the context with data for this file
             let path = ch
                 .path
@@ -104,6 +85,7 @@ impl Engine<HtmlContext> for HtmlEngine {
             data.insert("path".to_owned(), json!(path));
 
             let content = utils::render_markdown(&ch.content, false);
+            item.full_content.push_str(&content);
             data.insert("content".to_owned(), json!(content));
 
             data.insert("chapter_title".to_owned(), json!(ch.name));
@@ -123,6 +105,15 @@ impl Engine<HtmlContext> for HtmlEngine {
             }
         }
 
+        Ok(data)
+    }
+
+    fn finalize_book(&self, _ctx: &RenderContext, item: &mut HtmlContext) -> Result<Self::Output> {
+        let mut data = self.data.clone();
+        data.insert("content".to_owned(), json!(item.full_content));
+        data.insert("path".to_owned(), json!("index.md"));
+        data.insert("path_to_root".to_owned(), json!(""));
+        data.insert("is_index".to_owned(), json!("true"));
         Ok(data)
     }
 }

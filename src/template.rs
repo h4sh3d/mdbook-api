@@ -13,11 +13,26 @@ pub trait Template<C, I: Serialize>: Sized {
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self>;
 
+    fn initialize_book(&self, _ctx: &RenderContext, _theme: &Self::Theme) -> Result<()> {
+        Ok(())
+    }
+
     fn render_chapter(
         &self,
-        ctx: &RenderContext,
-        theme: &Self::Theme,
-        item: &C,
-        input: &mut I,
-    ) -> Result<()>;
+        _ctx: &RenderContext,
+        _theme: &Self::Theme,
+        _item: &mut C,
+        _input: &mut I,
+    ) -> Result<()> {
+        Ok(())
+    }
+
+    fn finalize_book(
+        &self,
+        _ctx: &RenderContext,
+        _theme: &Self::Theme,
+        _input: &mut I,
+    ) -> Result<()> {
+        Ok(())
+    }
 }

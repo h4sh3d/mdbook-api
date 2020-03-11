@@ -9,7 +9,6 @@ use crate::theme::Theme;
 
 use std::fs;
 
-use mdbook::book::BookItem;
 use mdbook::errors::Result;
 use mdbook::errors::ResultExt;
 use mdbook::renderer::{RenderContext, Renderer};
@@ -19,10 +18,7 @@ pub mod engine;
 pub mod template;
 pub mod theme;
 
-pub struct HtmlContext {
-    pub book_item: BookItem,
-    pub is_index: bool,
-}
+use engine::HtmlContext;
 
 /// Must be extensible and configurable but shoud implement the logic
 /// for rendering HTML project, combining theme and template management.
@@ -63,19 +59,24 @@ impl<E: Engine<HtmlContext>, T: Template<HtmlContext, E::Output>> HtmlRenderer<E
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
-        let mut is_index = true;
-        for item in book.iter() {
-            let html_item = HtmlContext {
-                book_item: item.clone(),
-                is_index,
-            };
+        self.template.initialize_book(&ctx, &self.theme)?;
 
-            let mut data = self.engine.process_chapter(&ctx, &html_item)?;
+        let mut html_ctx = HtmlContext::default();
+        html_ctx.is_index = true;
+
+        for item in book.iter() {
+            html_ctx.book_item = Some(item.clone());
+
+            let mut data = self.engine.process_chapter(&ctx, &mut html_ctx)?;
 
             self.template
-                .render_chapter(&ctx, &self.theme, &html_item, &mut data)?;
-            is_index = false;
+                .render_chapter(&ctx, &self.theme, &mut html_ctx, &mut data)?;
+
+            html_ctx.is_index = false;
         }
+
+        let mut data = self.engine.finalize_book(&ctx, &mut html_ctx)?;
+        self.template.finalize_book(&ctx, &self.theme, &mut data)?;
 
         self.theme.copy_static_files(&ctx)
     }

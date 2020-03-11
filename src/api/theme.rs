@@ -10,6 +10,8 @@ static INDEX: &[u8] = include_bytes!("../../theme/index.hbs");
 static FAVICON: &[u8] = include_bytes!("../../theme/favicon.png");
 static APP_CSS: &[u8] = include_bytes!("../../theme/app.css");
 static APP_JS: &[u8] = include_bytes!("../../theme/app.js");
+static LOGO: &[u8] = include_bytes!("../../theme/logo.png");
+static NAVBAR: &[u8] = include_bytes!("../../theme/navbar.png");
 
 static FONT_EOT: &[u8] = include_bytes!("../../theme/fonts/slate.eot");
 static FONT_SVG: &[u8] = include_bytes!("../../theme/fonts/slate.svg");
@@ -29,6 +31,8 @@ impl HtmlTheme {
         assets_map.insert("favicon.png".to_owned(), FAVICON.to_owned());
         assets_map.insert("app.css".to_owned(), APP_CSS.to_owned());
         assets_map.insert("app.js".to_owned(), APP_JS.to_owned());
+        assets_map.insert("logo.png".to_owned(), LOGO.to_owned());
+        assets_map.insert("navbar.png".to_owned(), NAVBAR.to_owned());
 
         assets_map.insert("fonts/slate.eot".to_owned(), FONT_EOT.to_owned());
         assets_map.insert("fonts/slate.svg".to_owned(), FONT_SVG.to_owned());

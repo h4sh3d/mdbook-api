@@ -30,10 +30,10 @@ where
         &self,
         ctx: &RenderContext,
         theme: &Self::Theme,
-        item: &HtmlContext,
+        item: &mut HtmlContext,
         input: &mut I,
     ) -> Result<()> {
-        if let BookItem::Chapter(ref ch) = &item.book_item {
+        if let Some(BookItem::Chapter(ref ch)) = &item.book_item {
             let mut handlebars = Handlebars::new();
 
             handlebars
@@ -69,6 +69,31 @@ where
         }
 
         Ok(())
+    }
+}
+
+/// One pager html template
+#[derive(Debug, Default)]
+pub struct HtmlOnePageTemplate;
+
+impl<I> Template<HtmlContext, I> for HtmlOnePageTemplate
+where
+    I: Serialize,
+{
+    type Theme = HtmlTheme;
+
+    fn load_from_context(_ctx: &RenderContext) -> Result<Self> {
+        Ok(HtmlOnePageTemplate)
+    }
+
+    fn finalize_book(&self, ctx: &RenderContext, theme: &Self::Theme, input: &mut I) -> Result<()> {
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("index", String::from_utf8(theme.get_template())?)?;
+
+        // Render the handlebars template with the data
+        let rendered = handlebars.render("index", &input)?;
+        let rendered = fix_code_blocks(&rendered);
+        utils::fs::write_file(&ctx.destination, "index.html", rendered.as_bytes())
     }
 }
 

@@ -13,5 +13,7 @@ pub trait Engine<C>: Sized {
 
     fn load_from_context(ctx: &RenderContext) -> Result<Self>;
 
-    fn process_chapter(&self, ctx: &RenderContext, item: &C) -> Result<Self::Output>;
+    fn process_chapter(&self, ctx: &RenderContext, item: &mut C) -> Result<Self::Output>;
+
+    fn finalize_book(&self, ctx: &RenderContext, item: &mut C) -> Result<Self::Output>;
 }

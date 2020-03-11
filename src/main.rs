@@ -1,4 +1,4 @@
-use mdbook_api::ApiRenderer;
+use mdbook_api::ApiOnePageRenderer;
 
 use mdbook::renderer::RenderContext;
 use std::io;
@@ -9,6 +9,6 @@ fn main() {
     let ctx = RenderContext::from_json(&mut stdin).unwrap();
 
     // Render the API documentation with the ApiRenderer
-    let renderer = ApiRenderer::new(&ctx).expect("Failed to load renderer");
+    let renderer = ApiOnePageRenderer::new(&ctx).expect("Failed to load renderer");
     renderer.render(&ctx).expect("Failed to render");
 }
