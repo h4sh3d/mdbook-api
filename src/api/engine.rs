@@ -1,6 +1,7 @@
 use crate::engine::Engine;
+use crate::api::parser::parser_from_str;
 
-//use std::collections::BTreeMap;
+use pulldown_cmark::html;
 
 use mdbook::book::BookItem;
 use mdbook::errors::Result;
@@ -84,7 +85,10 @@ impl Engine<HtmlContext> for HtmlEngine {
 
             data.insert("path".to_owned(), json!(path));
 
-            let content = utils::render_markdown(&ch.content, false);
+            let mut content = String::new();
+            let events = parser_from_str(&ch.content);
+            html::push_html(&mut content, events);
+
             item.full_content.push_str(&content);
             data.insert("content".to_owned(), json!(content));
 

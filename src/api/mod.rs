@@ -15,6 +15,7 @@ use mdbook::renderer::{RenderContext, Renderer};
 use mdbook::utils;
 
 pub mod engine;
+pub mod parser;
 pub mod template;
 pub mod theme;
 

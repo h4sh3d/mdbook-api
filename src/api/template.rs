@@ -57,8 +57,8 @@ where
 
             // Render the handlebars template with the data
             let rendered = handlebars.render("index", &input)?;
-            // TODO fixe html stream
             let rendered = fix_code_blocks(&rendered);
+            let rendered = fix_heading_ids(&rendered);
 
             // Write to file
             if item.is_index {
@@ -93,11 +93,13 @@ where
         // Render the handlebars template with the data
         let rendered = handlebars.render("index", &input)?;
         let rendered = fix_code_blocks(&rendered);
+        let rendered = fix_heading_ids(&rendered);
+
         utils::fs::write_file(&ctx.destination, "index.html", rendered.as_bytes())
     }
 }
 
-fn fix_code_blocks(html: &str) -> String {
+pub fn fix_code_blocks(html: &str) -> String {
     let regex = Regex::new(r##"<pre><code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures<'_>| {
@@ -122,6 +124,24 @@ fn fix_code_blocks(html: &str) -> String {
                 before = before,
                 classes = classes,
                 after = after
+            )
+        })
+        .into_owned()
+}
+
+pub fn fix_heading_ids(html: &str) -> String {
+    let regex = Regex::new(r##"<h([\d])>([^<]+)<"##).unwrap();
+    regex
+        .replace_all(html, |caps: &Captures<'_>| {
+            let level = &caps[1];
+            let title = &caps[2];
+            let id = utils::normalize_id(&title);
+
+            format!(
+                r#"<h{level} id="{id}">{title}<"#,
+                level = level,
+                id = id,
+                title = title,
             )
         })
         .into_owned()
