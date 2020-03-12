@@ -13,6 +13,7 @@ use mdbook::utils::fs::write_file;
 static INDEX: &[u8] = include_bytes!("../../theme/index.hbs");
 static FAVICON: &[u8] = include_bytes!("../../theme/favicon.png");
 static APP_CSS: &[u8] = include_bytes!("../../theme/app.css");
+static NORD_CSS: &[u8] = include_bytes!("../../theme/prism-nord.css");
 static APP_JS: &[u8] = include_bytes!("../../theme/app.js");
 static LOGO: &[u8] = include_bytes!("../../theme/logo.png");
 static NAVBAR: &[u8] = include_bytes!("../../theme/navbar.png");
@@ -34,6 +35,7 @@ impl HtmlTheme {
         let mut assets_map = HashMap::new();
         assets_map.insert("favicon.png".to_owned(), FAVICON.to_owned());
         assets_map.insert("app.css".to_owned(), APP_CSS.to_owned());
+        assets_map.insert("prism-nord.css".to_owned(), NORD_CSS.to_owned());
         assets_map.insert("app.js".to_owned(), APP_JS.to_owned());
         assets_map.insert("logo.png".to_owned(), LOGO.to_owned());
         assets_map.insert("navbar.png".to_owned(), NAVBAR.to_owned());
