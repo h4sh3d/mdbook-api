@@ -1,6 +1,10 @@
+use crate::api::engine::ApiConfig;
 use crate::theme::Theme;
 
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 
 use mdbook::errors::Result;
 use mdbook::renderer::RenderContext;
@@ -43,18 +47,48 @@ impl HtmlTheme {
     }
 }
 
+// TODO add assets present in theme folder, like imgs
+
 impl Theme for HtmlTheme {
     /// Load a HTML theme from a render context
-    fn load_from_context(_ctx: &RenderContext) -> Result<Self> {
-        let assets = Self::load_default_assests();
+    fn load_from_context(ctx: &RenderContext) -> Result<Self> {
+        let config = &ctx.config;
+        let api_config: ApiConfig = match config.get_deserialized_opt("output.api") {
+            Ok(Some(config)) => Some(config),
+            _ => None,
+        }
+        .unwrap_or_default();
 
-        // TODO overload assets if present in context
-        // TODO add assets present in theme folder, like imgs
+        let mut assets = Self::load_default_assests();
+        let mut template = INDEX.to_owned();
 
-        Ok(HtmlTheme {
-            template: INDEX.into(),
-            assets,
-        })
+        let theme_dir = if let Some(path) = api_config.theme_dir {
+            ctx.root.join(Path::new(&path).to_path_buf())
+        } else {
+            ctx.root.join("theme")
+        };
+
+        if theme_dir.exists() && theme_dir.is_dir() {
+            // Overload assets if present in theme_dir
+            for (name, mut content) in &mut assets {
+                let filename = theme_dir.join(name);
+
+                if !filename.exists() {
+                    continue;
+                }
+
+                load_file_contents(&filename, &mut content)?;
+            }
+
+            // Overload index template
+            let filename = theme_dir.join("index.hbs");
+
+            if filename.exists() {
+                load_file_contents(&filename, &mut template)?;
+            }
+        }
+
+        Ok(HtmlTheme { template, assets })
     }
 
     fn copy_static_files(&self, ctx: &RenderContext) -> Result<()> {
@@ -76,4 +110,20 @@ impl Theme for HtmlTheme {
     fn get_template(&self) -> Vec<u8> {
         self.template.clone()
     }
+}
+
+/// Checks if a file exists, if so, the destination buffer will be filled with
+/// its contents.
+pub fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) -> Result<()> {
+    let filename = filename.as_ref();
+
+    let mut buffer = Vec::new();
+    File::open(filename)?.read_to_end(&mut buffer)?;
+
+    // We needed the buffer so we'd only overwrite the existing content if we
+    // could successfully load the file into memory.
+    dest.clear();
+    dest.append(&mut buffer);
+
+    Ok(())
 }

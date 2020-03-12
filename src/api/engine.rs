@@ -13,6 +13,7 @@ use mdbook::utils;
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ApiConfig {
+    pub theme_dir: Option<String>,
     pub lang: Vec<Language>,
 }
 
@@ -58,8 +59,7 @@ impl Engine<HtmlContext> for HtmlEngine {
 
         let api_config: ApiConfig = match config.get_deserialized_opt("output.api") {
             Ok(Some(config)) => Some(config),
-            Ok(None) => None,
-            Err(_) => None,
+            _ => None,
         }
         .unwrap_or_default();
 
