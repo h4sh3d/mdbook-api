@@ -18,7 +18,7 @@
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/monokai-sublime.min.css">
     </head>
-    <body class="index" data-languages="[&quot;rust&quot;,&quot;go&quot;]">
+    <body class="index" data-languages='{{{lang_list}}}'>
         <a href="#" id="nav-button">
           <span>
             NAV
@@ -28,8 +28,9 @@
         <div class="toc-wrapper">
           <img src="logo.png" class="logo" alt="Logo" />
           <div class="lang-selector">
-            <a href="#" data-language-name="rust">rust</a>
-            <a href="#" data-language-name="go">go</a>
+            {{#each languages}}
+                <a href="#" data-language-name="{{this.id}}">{{this.name}}</a>
+            {{/each}}
           </div>
 
           <div class="search">
@@ -52,11 +53,28 @@
           </div>
           <div class="dark-box">
               <div class="lang-selector">
-                  <a href="#" data-language-name="rust">rust</a>
-                  <a href="#" data-language-name="go">go</a>
+                {{#each languages}}
+                    <a href="#" data-language-name="{{this.id}}">{{this.name}}</a>
+                {{/each}}
               </div>
           </div>
         </div>
+
+        {{#if livereload}}
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("{{{livereload}}}");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        {{/if}}
 
         <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script>

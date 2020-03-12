@@ -2,6 +2,7 @@ use crate::api::parser::parser_from_str;
 use crate::engine::Engine;
 
 use pulldown_cmark::html;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use mdbook::book::BookItem;
@@ -9,6 +10,23 @@ use mdbook::errors::Result;
 use mdbook::errors::ResultExt;
 use mdbook::renderer::RenderContext;
 use mdbook::utils;
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct ApiConfig {
+    pub lang: Vec<Language>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct Language {
+    pub id: String,
+    pub name: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct LangLink {
+    pub id: String,
+    pub name: String,
+}
 
 #[derive(Default)]
 pub struct HtmlContext {
@@ -36,6 +54,15 @@ impl Engine<HtmlContext> for HtmlEngine {
         let book = &ctx.book;
         let config = &ctx.config;
 
+        let html_config = &ctx.config.html_config().unwrap_or_default();
+
+        let api_config: ApiConfig = match config.get_deserialized_opt("output.api") {
+            Ok(Some(config)) => Some(config),
+            Ok(None) => None,
+            Err(_) => None,
+        }
+        .unwrap_or_default();
+
         let mut data = serde_json::Map::new();
 
         data.insert(
@@ -51,6 +78,36 @@ impl Engine<HtmlContext> for HtmlEngine {
             json!(config.book.description.clone().unwrap_or_default()),
         );
         data.insert("favicon".to_owned(), json!("favicon.png"));
+
+        if let Some(ref livereload) = html_config.livereload_url {
+            data.insert("livereload".to_owned(), json!(livereload));
+        }
+
+        let mut lang_list = vec![];
+        let mut languages = vec![];
+
+        for lang in api_config.lang {
+            lang_list.push(lang.id.clone());
+
+            let l = if let Some(name) = lang.name {
+                LangLink {
+                    id: lang.id.clone(),
+                    name,
+                }
+            } else {
+                LangLink {
+                    id: lang.id.clone(),
+                    name: lang.id.clone(),
+                }
+            };
+            languages.push(l);
+        }
+
+        data.insert(
+            "lang_list".to_owned(),
+            json!(serde_json::to_string(&lang_list)?),
+        );
+        data.insert("languages".to_owned(), json!(&languages));
 
         let mut chapters = vec![];
 
