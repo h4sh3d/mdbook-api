@@ -14,7 +14,14 @@ use mdbook::utils;
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ApiConfig {
     pub theme_dir: Option<String>,
+    pub toc_footer: Option<Vec<TocFooter>>,
     pub lang: Vec<Language>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct TocFooter {
+    pub link_url: String,
+    pub content: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -108,6 +115,11 @@ impl Engine<HtmlContext> for HtmlEngine {
             json!(serde_json::to_string(&lang_list)?),
         );
         data.insert("languages".to_owned(), json!(&languages));
+
+        data.insert(
+            "toc_footer".to_owned(),
+            json!(api_config.toc_footer.unwrap_or_default()),
+        );
 
         let mut chapters = vec![];
 

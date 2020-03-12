@@ -41,8 +41,14 @@
           {{#toc}}{{/toc}}
 
           <ul class="toc-footer">
-             <li><a href='#'>Sign Up for a Developer Key</a></li>
-             <li><a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a></li>
+             {{#if toc_footer}}
+                 {{#each toc_footer}}
+                     <li><a href='{{this.link_url}}'>{{this.content}}</a></li>
+                 {{/each}}
+             {{else}}
+                 <li><a href='#'>Sign Up for a Developer Key</a></li>
+                 <li><a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a></li>
+             {{/if}}
           </ul>
         </div>
 
